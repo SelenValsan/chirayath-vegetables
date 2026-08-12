@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Poppins', 'Inter', Arial, sans-serif;
+  }
+  body {
+    @apply bg-page text-text-main;
+  }
+  *:focus-visible {
+    outline: 2px solid #4F772D;
+    outline-offset: 2px;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #receipt-print-area,
+  #receipt-print-area * {
+    visibility: visible;
+  }
+  #receipt-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-white text-text-main text-sm font-medium px-4 py-2.5 rounded-lg border border-border hover:bg-page transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-danger {
+    @apply bg-error text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .card {
+    @apply bg-white border border-border rounded-card shadow-card;
+  }
+  .input-field {
+    @apply w-full text-sm px-3 py-2.5 rounded-lg border border-border bg-white text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors;
+  }
+  .label-field {
+    @apply block text-sm font-medium text-text-secondary mb-1.5;
+  }
+}
