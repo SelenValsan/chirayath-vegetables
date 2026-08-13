@@ -127,6 +127,7 @@ export default function Payments() {
             <Table columns={[
               { key: 'date', label: 'Date' },
               { key: 'shop', label: 'Shop' },
+              { key: 'direction', label: 'Direction' },
               { key: 'amount', label: 'Amount' },
               { key: 'method', label: 'Method' },
               { key: 'ref', label: 'Reference' },
@@ -137,7 +138,12 @@ export default function Payments() {
                 <TableRow key={p._id}>
                   <TableCell className="text-text-secondary">{formatDate(p.paymentDate)}</TableCell>
                   <TableCell className="font-medium">{p.shopId?.name || '—'}</TableCell>
-                  <TableCell><CurrencyDisplay value={p.amount} tone="success" /></TableCell>
+                  <TableCell>
+                    <Badge status={p.direction === 'paid' ? 'error' : 'success'}>
+                      {p.direction === 'paid' ? 'Paid to shop' : 'Received'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell><CurrencyDisplay value={p.amount} tone={p.direction === 'paid' ? 'error' : 'success'} /></TableCell>
                   <TableCell className="text-text-secondary">{p.paymentMethod}</TableCell>
                   <TableCell className="text-text-secondary">{p.referenceNumber || '—'}</TableCell>
                   <TableCell><Badge status={p.status === 'voided' ? 'voided' : 'active'} /></TableCell>

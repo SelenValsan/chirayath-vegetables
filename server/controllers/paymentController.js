@@ -46,7 +46,7 @@ const getPayment = asyncHandler(async (req, res) => {
 
 // @route POST /api/payments
 const createPayment = asyncHandler(async (req, res) => {
-  const { shopId, amount, paymentMethod, paymentDate, referenceNumber, notes } = req.body;
+  const { shopId, amount, direction, paymentMethod, paymentDate, referenceNumber, notes } = req.body;
 
   const shop = await Shop.findOne({ _id: shopId, isDeleted: false });
   if (!shop) throw new ApiError('Shop not found', 404);
@@ -54,12 +54,14 @@ const createPayment = asyncHandler(async (req, res) => {
   const amt = Number(amount);
   if (!(amt > 0)) throw new ApiError('Payment amount must be greater than 0', 400);
 
+  const dir = direction === 'paid' ? 'paid' : 'received';
   const balanceBefore = shop.currentBalance;
   const payDate = paymentDate ? new Date(paymentDate) : new Date();
 
   const payment = await Payment.create({
     shopId,
     amount: amt,
+    direction: dir,
     paymentMethod: paymentMethod || 'Cash',
     paymentDate: payDate,
     referenceNumber: referenceNumber || '',
@@ -72,10 +74,13 @@ const createPayment = asyncHandler(async (req, res) => {
   await createLedgerEntry({
     shopId,
     type: 'payment',
-    credit: amt,
+    debit: dir === 'paid' ? amt : 0,
+    credit: dir === 'received' ? amt : 0,
     referenceId: payment._id,
     referenceType: 'Payment',
-    description: `Payment received (${payment.paymentMethod})`,
+    description: dir === 'paid'
+      ? `Cash paid to shop (${payment.paymentMethod})`
+      : `Payment received (${payment.paymentMethod})`,
     date: payDate,
     createdBy: req.user._id,
   });
@@ -93,13 +98,14 @@ const updatePayment = asyncHandler(async (req, res) => {
   if (!payment) throw new ApiError('Payment not found', 404);
   if (payment.status === 'voided') throw new ApiError('Cannot edit a voided payment', 400);
 
-  const { amount, paymentMethod, paymentDate, referenceNumber, notes } = req.body;
+  const { amount, direction, paymentMethod, paymentDate, referenceNumber, notes } = req.body;
 
   if (amount !== undefined) {
     const amt = Number(amount);
     if (!(amt > 0)) throw new ApiError('Payment amount must be greater than 0', 400);
     payment.amount = amt;
   }
+  if (direction !== undefined) payment.direction = direction === 'paid' ? 'paid' : 'received';
   if (paymentMethod !== undefined) payment.paymentMethod = paymentMethod;
   if (paymentDate !== undefined) payment.paymentDate = new Date(paymentDate);
   if (referenceNumber !== undefined) payment.referenceNumber = referenceNumber;
@@ -107,10 +113,14 @@ const updatePayment = asyncHandler(async (req, res) => {
   payment.updatedBy = req.user._id;
   await payment.save();
 
+  const dir = payment.direction;
   await updateLedgerEntryByReference(payment._id, 'Payment', {
-    credit: payment.amount,
+    debit: dir === 'paid' ? payment.amount : 0,
+    credit: dir === 'received' ? payment.amount : 0,
     date: payment.paymentDate,
-    description: `Payment received (${payment.paymentMethod}) - edited`,
+    description: dir === 'paid'
+      ? `Cash paid to shop (${payment.paymentMethod}) - edited`
+      : `Payment received (${payment.paymentMethod}) - edited`,
   });
 
   await recalculateShopBalance(payment.shopId);

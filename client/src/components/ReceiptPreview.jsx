@@ -69,7 +69,7 @@ export default function ReceiptPreview({ receipt }) {
       ) : (
         <div className="space-y-1 text-sm">
           <div className="flex justify-between"><span className="text-text-muted">Balance Before</span><span>{formatCurrency(s.balanceBefore)}</span></div>
-          <div className="flex justify-between font-semibold"><span>Amount Received</span><span>{formatCurrency(s.amount)}</span></div>
+          <div className="flex justify-between font-semibold"><span>{s.direction === 'paid' ? 'Amount Paid to Shop' : 'Amount Received'}</span><span>{formatCurrency(s.amount)}</span></div>
           <div className="flex justify-between text-text-muted text-xs"><span>Method</span><span>{s.paymentMethod}</span></div>
           {s.referenceNumber && <div className="flex justify-between text-text-muted text-xs"><span>Reference</span><span>{s.referenceNumber}</span></div>}
           <div className="flex justify-between pt-1.5 border-t border-border font-semibold"><span>Balance After</span><span>{formatCurrency(s.balanceAfter)}</span></div>

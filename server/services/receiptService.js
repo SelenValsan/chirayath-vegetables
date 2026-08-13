@@ -43,16 +43,18 @@ async function createEntryReceipt({ shop, entry, createdBy }) {
 
 async function createPaymentReceipt({ shop, payment, balanceBefore, createdBy }) {
   const receiptNumber = await generateReceiptNumber(payment.paymentDate);
+  const isPaid = payment.direction === 'paid';
   const snapshot = {
     businessName: 'Chirayath Vegetables',
     tagline: 'Dine with Nature',
     shopName: shop.name,
     shopPhone: shop.phone,
     amount: payment.amount,
+    direction: payment.direction || 'received',
     paymentMethod: payment.paymentMethod,
     referenceNumber: payment.referenceNumber,
     balanceBefore,
-    balanceAfter: balanceBefore - payment.amount,
+    balanceAfter: isPaid ? balanceBefore + payment.amount : balanceBefore - payment.amount,
     date: payment.paymentDate,
   };
   return Receipt.create({

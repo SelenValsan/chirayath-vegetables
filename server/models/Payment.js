@@ -4,6 +4,9 @@ const paymentSchema = new mongoose.Schema(
   {
     shopId: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', required: true },
     amount: { type: Number, required: [true, 'Amount is required'], min: [0.01, 'Amount must be greater than 0'] },
+    // 'received' = money coming in from the shop (normal collection).
+    // 'paid' = money going out to the shop (refund, advance, correction) - increases what they owe.
+    direction: { type: String, enum: ['received', 'paid'], default: 'received' },
     paymentMethod: {
       type: String,
       enum: ['Cash', 'UPI', 'Bank Transfer', 'Cheque', 'Other'],
