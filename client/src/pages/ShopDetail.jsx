@@ -140,18 +140,25 @@ export default function ShopDetail() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {ledger.map((row) => (
-                  <tr key={row._id}>
-                    <td className="py-3 px-3 whitespace-nowrap text-text-secondary">{formatDate(row.date)}</td>
-                    <td className="py-3 px-3 text-text-main">
-                      {row.description}
-                      <span className="text-xs text-text-muted ml-1.5 capitalize">({row.type.replace('_', ' ')})</span>
-                    </td>
-                    <td className="py-3 px-3 text-right text-error font-medium">{row.debit > 0 ? formatCurrency(row.debit) : '—'}</td>
-                    <td className="py-3 px-3 text-right text-success font-medium">{row.credit > 0 ? formatCurrency(row.credit) : '—'}</td>
-                    <td className="py-3 px-3 text-right font-semibold text-text-main">{formatCurrency(row.balanceAfter)}</td>
-                  </tr>
-                ))}
+                {ledger.map((row) => {
+                  const isClickable = row.referenceType === 'Entry' && row.referenceId;
+                  return (
+                    <tr
+                      key={row._id}
+                      onClick={isClickable ? () => navigate(`/entries/${row.referenceId}`) : undefined}
+                      className={isClickable ? 'cursor-pointer hover:bg-page transition-colors' : ''}
+                    >
+                      <td className="py-3 px-3 whitespace-nowrap text-text-secondary">{formatDate(row.date)}</td>
+                      <td className="py-3 px-3 text-text-main">
+                        {row.description}
+                        <span className="text-xs text-text-muted ml-1.5 capitalize">({row.type.replace('_', ' ')})</span>
+                      </td>
+                      <td className="py-3 px-3 text-right text-error font-medium">{row.debit > 0 ? formatCurrency(row.debit) : '—'}</td>
+                      <td className="py-3 px-3 text-right text-success font-medium">{row.credit > 0 ? formatCurrency(row.credit) : '—'}</td>
+                      <td className="py-3 px-3 text-right font-semibold text-text-main">{formatCurrency(row.balanceAfter)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

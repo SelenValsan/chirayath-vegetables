@@ -22,6 +22,7 @@ export default function Entries() {
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0, limit: 20 });
   const [loading, setLoading] = useState(true);
   const [shopId, setShopId] = useState('');
+  const [status, setStatus] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [page, setPage] = useState(1);
@@ -33,20 +34,30 @@ export default function Entries() {
   const fetchEntries = useCallback(() => {
     setLoading(true);
     entryService
-      .getEntries({ shopId: shopId || undefined, from: from || undefined, to: to || undefined, page, limit: 15 })
+      .getEntries({ shopId: shopId || undefined, status: status || undefined, from: from || undefined, to: to || undefined, page, limit: 15 })
       .then(({ data, meta: m }) => { setEntries(data); setMeta(m); })
       .catch((err) => toast.error(err.message || 'Failed to load entries'))
       .finally(() => setLoading(false));
-  }, [shopId, from, to, page]);
+  }, [shopId, status, from, to, page]);
 
   useEffect(() => { fetchEntries(); }, [fetchEntries]);
-  useEffect(() => { setPage(1); }, [shopId, from, to]);
+  useEffect(() => { setPage(1); }, [shopId, status, from, to]);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-col sm:flex-row gap-3 flex-1">
           <Select value={shopId} onChange={(e) => setShopId(e.target.value)} placeholder="All shops" options={shops.map((s) => ({ value: s._id, label: s.name }))} className="sm:w-56" />
+          <Select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            options={[
+              { value: '', label: 'All Entries' },
+              { value: 'active', label: 'Active' },
+              { value: 'voided', label: 'Voided' },
+            ]}
+            className="sm:w-40"
+          />
           <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="input-field sm:w-40" aria-label="From date" />
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="input-field sm:w-40" aria-label="To date" />
         </div>
