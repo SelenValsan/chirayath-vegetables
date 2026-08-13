@@ -113,10 +113,53 @@ const updateShop = asyncHandler(async (req, res) => {
   editable.forEach((field) => {
     if (req.body[field] !== undefined) shop[field] = req.body[field];
   });
+
+  // Opening balance can be edited after creation. Its financial effect lives entirely
+  // in a single 'opening_balance' ledger transaction - update it (or create it if this
+  // shop never had one, e.g. it started at 0) and let recalculation handle the rest.
+  if (req.body.openingBalance !== undefined) {
+    const newOpeningBalance = Number(req.body.openingBalance) || 0;
+    if (newOpeningBalance !== shop.openingBalance) {
+      shop.openingBalance = newOpeningBalance;
+      const debit = newOpeningBalance > 0 ? newOpeningBalance : 0;
+      const credit = newOpeningBalance < 0 ? Math.abs(newOpeningBalance) : 0;
+
+      const existing = await LedgerTransaction.findOne({
+        shopId: shop._id,
+        type: 'opening_balance',
+        referenceType: 'Shop',
+        voided: false,
+      });
+
+      if (existing) {
+        existing.debit = debit;
+        existing.credit = credit;
+        await existing.save();
+      } else {
+        await createLedgerEntry({
+          shopId: shop._id,
+          type: 'opening_balance',
+          debit,
+          credit,
+          referenceId: shop._id,
+          referenceType: 'Shop',
+          description: 'Opening balance (edited)',
+          date: shop.createdAt,
+          createdBy: req.user._id,
+        });
+      }
+    }
+  }
+
   shop.updatedBy = req.user._id;
   await shop.save();
 
-  return success(res, shop, 'Shop updated successfully');
+  if (req.body.openingBalance !== undefined) {
+    await recalculateShopBalance(shop._id);
+  }
+
+  const updatedShop = await Shop.findById(shop._id);
+  return success(res, updatedShop, 'Shop updated successfully');
 });
 
 // @route PATCH /api/shops/:id/status

@@ -165,6 +165,71 @@ export default function ShopDetail() {
       <Modal open={paymentOpen} onClose={() => setPaymentOpen(false)} title="Record Payment">
         <PaymentForm shop={shop} onSubmit={handlePayment} onCancel={() => setPaymentOpen(false)} loading={submitting} />
       </Modal>
+
+      {/* Printable statement - hidden on screen, shown only via @media print in index.css */}
+      <div id="receipt-print-area" className="hidden">
+        <div className="p-8">
+          <div className="text-center mb-6">
+            <h2 className="text-lg font-semibold">Chirayath Vegetables</h2>
+            <p className="text-xs text-text-muted">Dine with Nature</p>
+          </div>
+          <div className="flex justify-between text-sm mb-4 pb-4 border-b border-dashed border-border">
+            <div>
+              <p className="text-text-muted text-xs">Statement For</p>
+              <p className="font-medium">{shop.name}</p>
+              {shop.ownerName && <p className="text-xs text-text-muted">{shop.ownerName}</p>}
+              <p className="text-xs text-text-muted">{shop.phone}</p>
+              {shop.address && <p className="text-xs text-text-muted">{shop.address}</p>}
+            </div>
+            <div className="text-right">
+              <p className="text-text-muted text-xs">Statement Date</p>
+              <p className="font-medium">{formatDate(new Date())}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 text-sm mb-6">
+            <div>
+              <p className="text-text-muted text-xs">Total Purchases</p>
+              <p className="font-semibold">{formatCurrency(summary?.totalPurchases)}</p>
+            </div>
+            <div>
+              <p className="text-text-muted text-xs">Total Paid</p>
+              <p className="font-semibold">{formatCurrency(summary?.totalPaid)}</p>
+            </div>
+            <div>
+              <p className="text-text-muted text-xs">Current Balance</p>
+              <p className="font-semibold">{formatCurrency(shop.currentBalance)}</p>
+            </div>
+          </div>
+
+          <table className="w-full text-sm mb-4">
+            <thead>
+              <tr className="border-b border-border text-xs text-text-muted">
+                <th className="text-left py-1.5">Date</th>
+                <th className="text-left py-1.5">Description</th>
+                <th className="text-right py-1.5">Debit</th>
+                <th className="text-right py-1.5">Credit</th>
+                <th className="text-right py-1.5">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ledger.map((row) => (
+                <tr key={row._id} className="border-b border-border/50">
+                  <td className="py-1.5">{formatDate(row.date)}</td>
+                  <td className="py-1.5">{row.description}</td>
+                  <td className="py-1.5 text-right">{row.debit > 0 ? formatCurrency(row.debit) : '—'}</td>
+                  <td className="py-1.5 text-right">{row.credit > 0 ? formatCurrency(row.credit) : '—'}</td>
+                  <td className="py-1.5 text-right font-medium">{formatCurrency(row.balanceAfter)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <p className="text-center text-xs text-text-muted mt-6 pt-4 border-t border-dashed border-border">
+            Thank you for your business.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

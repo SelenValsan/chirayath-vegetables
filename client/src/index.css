@@ -16,19 +16,30 @@
 }
 
 @media print {
+  /* The app shell uses a fixed-height, overflow-hidden, scrolling layout for the
+     on-screen UI. Printing needs everything to expand to its natural height and
+     stop clipping, otherwise the receipt gets cut down to nothing on paper. */
+  html, body, #root {
+    height: auto !important;
+    overflow: visible !important;
+  }
   body * {
     visibility: hidden;
+    overflow: visible !important;
+    height: auto !important;
   }
   #receipt-print-area,
   #receipt-print-area * {
     visibility: visible;
   }
   #receipt-print-area {
+    display: block !important;
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
     border: none;
+    box-shadow: none;
   }
 }
 

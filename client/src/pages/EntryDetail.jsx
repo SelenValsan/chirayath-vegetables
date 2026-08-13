@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Pencil, Trash2, Printer, Loader2 } from 'lucide-react';
 import * as entryService from '../services/entryService';
+import * as receiptService from '../services/receiptService';
 import { Card, CardHeading } from '../components/Card';
 import Button from '../components/Button';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -39,6 +40,19 @@ export default function EntryDetail() {
     }
   };
 
+  const handlePrint = async () => {
+    try {
+      const { data } = await receiptService.getReceipts({ entryId: id, type: 'entry' });
+      if (data && data.length > 0) {
+        navigate(`/receipts/${data[0]._id}`);
+      } else {
+        toast.error('No receipt found for this entry');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Unable to find receipt');
+    }
+  };
+
   if (loading) return <div className="flex items-center justify-center py-24"><Loader2 className="w-6 h-6 text-primary animate-spin" /></div>;
   if (!entry) return null;
 
@@ -60,7 +74,7 @@ export default function EntryDetail() {
         </div>
         {!isVoided && (
           <div className="flex gap-2">
-            <Button variant="secondary" icon={Printer} onClick={() => window.print()}>Print</Button>
+            <Button variant="secondary" icon={Printer} onClick={handlePrint}>Print</Button>
             <Button variant="secondary" icon={Pencil} onClick={() => navigate(`/entries/${id}/edit`)}>Edit</Button>
             <Button variant="danger" icon={Trash2} onClick={() => setDeleteOpen(true)}>Delete</Button>
           </div>

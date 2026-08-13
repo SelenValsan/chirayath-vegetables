@@ -42,9 +42,12 @@ async function updateLedgerEntryByReference(referenceId, referenceType, updates)
 /**
  * THE source of truth for shop balances.
  * Replays every non-voided ledger transaction for a shop in chronological order,
- * starting from the shop's openingBalance, and rewrites balanceAfter on each row.
- * This guarantees the balance is always correct no matter how many edits/voids
- * have happened, without relying on incremental +/- math that can drift.
+ * starting from ZERO, and rewrites balanceAfter on each row.
+ * The shop's opening balance is represented entirely by its own 'opening_balance'
+ * ledger transaction (created in shopController) - it is NOT added again here,
+ * since that would double-count it. This guarantees the balance is always
+ * correct no matter how many edits/voids have happened, without relying on
+ * incremental +/- math that can drift.
  */
 async function recalculateShopBalance(shopId) {
   const shop = await Shop.findById(shopId);
@@ -52,7 +55,7 @@ async function recalculateShopBalance(shopId) {
 
   const transactions = await LedgerTransaction.find({ shopId, voided: false }).sort({ date: 1, createdAt: 1 });
 
-  let running = shop.openingBalance || 0;
+  let running = 0;
   const bulkOps = [];
 
   for (const tx of transactions) {

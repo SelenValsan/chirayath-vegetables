@@ -46,7 +46,6 @@ export default function ShopForm({ initialData, onSubmit, onCancel, submitLabel 
     e.preventDefault();
     if (!validate()) return;
     const payload = { ...form, openingBalance: Number(form.openingBalance) || 0 };
-    if (isEdit) delete payload.openingBalance;
     onSubmit(payload);
   };
 
@@ -72,22 +71,27 @@ export default function ShopForm({ initialData, onSubmit, onCancel, submitLabel 
       <Input label="Address" value={form.address} onChange={set('address')} placeholder="Optional" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="Location / Area" value={form.location} onChange={set('location')} placeholder="Optional" />
-        {!isEdit && (
-          <Input label="Opening Balance (₹)" type="number" min="0" step="0.01" value={form.openingBalance} onChange={set('openingBalance')} placeholder="0" />
-        )}
-        {isEdit && (
-          <Select
-            label="Status"
-            value={form.status}
-            onChange={set('status')}
-            options={[
-              { value: 'active', label: 'Active' },
-              { value: 'inactive', label: 'Inactive' },
-              { value: 'overdue', label: 'Overdue' },
-            ]}
-          />
-        )}
+        <Input
+          label="Opening Balance (₹)"
+          type="number"
+          step="0.01"
+          value={form.openingBalance}
+          onChange={set('openingBalance')}
+          placeholder="0"
+        />
       </div>
+      {isEdit && (
+        <Select
+          label="Status"
+          value={form.status}
+          onChange={set('status')}
+          options={[
+            { value: 'active', label: 'Active' },
+            { value: 'inactive', label: 'Inactive' },
+            { value: 'overdue', label: 'Overdue' },
+          ]}
+        />
+      )}
       <div>
         <label className="label-field">Notes</label>
         <textarea className="input-field" rows={2} value={form.notes} onChange={set('notes')} placeholder="Optional" />

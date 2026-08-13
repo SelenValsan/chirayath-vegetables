@@ -26,6 +26,14 @@ const FILTERS = [
   { value: 'overdue', label: 'Overdue' },
 ];
 
+const SORT_OPTIONS = [
+  { value: '-updatedAt', label: 'Latest Activity' },
+  { value: 'name', label: 'Name (A-Z)' },
+  { value: '-name', label: 'Name (Z-A)' },
+  { value: '-currentBalance', label: 'Balance (High to Low)' },
+  { value: 'currentBalance', label: 'Balance (Low to High)' },
+];
+
 export default function Shops() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,6 +42,7 @@ export default function Shops() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState(searchParams.get('status') || 'all');
+  const [sort, setSort] = useState('-updatedAt');
   const [page, setPage] = useState(1);
 
   const [addOpen, setAddOpen] = useState(false);
@@ -46,14 +55,14 @@ export default function Shops() {
   const fetchShops = useCallback(() => {
     setLoading(true);
     shopService
-      .getShops({ search: search || undefined, status, page, limit: 12 })
+      .getShops({ search: search || undefined, status, sort, page, limit: 12 })
       .then(({ data, meta: m }) => {
         setShops(data);
         setMeta(m);
       })
       .catch((err) => toast.error(err.message || 'Failed to load shops'))
       .finally(() => setLoading(false));
-  }, [search, status, page]);
+  }, [search, status, sort, page]);
 
   useEffect(() => { fetchShops(); }, [fetchShops]);
   useEffect(() => { setPage(1); }, [search, status]);
@@ -124,6 +133,12 @@ export default function Shops() {
             onChange={(e) => { setStatus(e.target.value); setSearchParams(e.target.value === 'all' ? {} : { status: e.target.value }); }}
             options={FILTERS}
             className="sm:w-48"
+          />
+          <Select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            options={SORT_OPTIONS}
+            className="sm:w-52"
           />
         </div>
         <Button icon={Plus} onClick={() => setAddOpen(true)} className="flex-shrink-0">Add Shop</Button>

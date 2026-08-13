@@ -4,10 +4,12 @@ const Receipt = require('../models/Receipt');
 
 // @route GET /api/receipts?shopId=&type=&page=&limit=
 const getReceipts = asyncHandler(async (req, res) => {
-  const { shopId, type, page = 1, limit = 20 } = req.query;
+  const { shopId, type, entryId, paymentId, page = 1, limit = 20 } = req.query;
   const filter = {};
   if (shopId) filter.shopId = shopId;
   if (type) filter.type = type;
+  if (entryId) filter.entryId = entryId;
+  if (paymentId) filter.paymentId = paymentId;
 
   const pageNum = Math.max(parseInt(page, 10) || 1, 1);
   const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
