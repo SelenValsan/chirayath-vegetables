@@ -1,6 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const { success, ApiError } = require('../utils/apiResponse');
 const LedgerTransaction = require('../models/LedgerTransaction');
+const { recalculateShopBalance } = require('../services/ledgerService');
 
 // @route GET /api/transactions?shopId=&type=&from=&to=&search=&page=&limit=
 // Global ledger view across all shops - the "Transactions" page
@@ -54,4 +55,25 @@ const getShopLedger = asyncHandler(async (req, res) => {
   return success(res, ledger, 'Shop ledger fetched successfully');
 });
 
-module.exports = { getTransactions, getTransaction, getShopLedger };
+// @route DELETE /api/transactions/:id
+// Intentionally scoped: only 'opening_balance' and 'adjustment' entries can be removed here.
+// Sale and payment entries carry their own real records (Entry/Payment) and must be
+// voided through those, which correctly reverses receipts and linked records too -
+// this endpoint would bypass that and corrupt the audit trail if allowed on them.
+const deleteLedgerTransaction = asyncHandler(async (req, res) => {
+  const transaction = await LedgerTransaction.findById(req.params.id);
+  if (!transaction) throw new ApiError('Transaction not found', 404);
+  if (transaction.voided) throw new ApiError('This entry is already removed', 400);
+  if (!['opening_balance', 'adjustment'].includes(transaction.type)) {
+    throw new ApiError('Only opening balance and adjustment entries can be removed here. Sales and payments must be deleted from their own page.', 400);
+  }
+
+  transaction.voided = true;
+  await transaction.save();
+
+  await recalculateShopBalance(transaction.shopId);
+
+  return success(res, {}, 'Ledger entry removed and balance updated');
+});
+
+module.exports = { getTransactions, getTransaction, getShopLedger, deleteLedgerTransaction };

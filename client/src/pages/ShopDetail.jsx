@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Plus, Wallet, Pencil, Printer, Phone, MapPin, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Wallet, Pencil, Printer, Phone, MapPin, Loader2, Trash2 } from 'lucide-react';
 import * as shopService from '../services/shopService';
 import * as paymentService from '../services/paymentService';
+import * as transactionService from '../services/transactionService';
 import { Card, CardHeading } from '../components/Card';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
+import ConfirmationModal from '../components/ConfirmationModal';
 import ShopForm from '../components/ShopForm';
 import PaymentForm from '../components/PaymentForm';
 import Badge from '../components/Badge';
@@ -25,6 +27,7 @@ export default function ShopDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [deleteLedgerRow, setDeleteLedgerRow] = useState(null);
 
   const fetchAll = useCallback(() => {
     setLoading(true);
@@ -63,6 +66,20 @@ export default function ShopDetail() {
       fetchAll();
     } catch (err) {
       toast.error(err.message || 'Unable to record payment');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteLedgerRow = async () => {
+    setSubmitting(true);
+    try {
+      await transactionService.deleteLedgerTransaction(deleteLedgerRow._id);
+      toast.success('Ledger entry removed and balance updated');
+      setDeleteLedgerRow(null);
+      fetchAll();
+    } catch (err) {
+      toast.error(err.message || 'Unable to remove this entry');
     } finally {
       setSubmitting(false);
     }
@@ -137,11 +154,13 @@ export default function ShopDetail() {
                   <th className="text-right font-medium text-text-secondary py-3 px-3">Debit</th>
                   <th className="text-right font-medium text-text-secondary py-3 px-3">Credit</th>
                   <th className="text-right font-medium text-text-secondary py-3 px-3">Balance</th>
+                  <th className="text-right font-medium text-text-secondary py-3 px-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {ledger.map((row) => {
                   const isClickable = row.referenceType === 'Entry' && row.referenceId;
+                  const isRemovable = ['opening_balance', 'adjustment'].includes(row.type);
                   return (
                     <tr
                       key={row._id}
@@ -156,6 +175,17 @@ export default function ShopDetail() {
                       <td className="py-3 px-3 text-right text-error font-medium">{row.debit > 0 ? formatCurrency(row.debit) : '—'}</td>
                       <td className="py-3 px-3 text-right text-success font-medium">{row.credit > 0 ? formatCurrency(row.credit) : '—'}</td>
                       <td className="py-3 px-3 text-right font-semibold text-text-main">{formatCurrency(row.balanceAfter)}</td>
+                      <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
+                        {isRemovable && (
+                          <button
+                            onClick={() => setDeleteLedgerRow(row)}
+                            aria-label="Remove entry"
+                            className="p-1.5 rounded-lg text-error hover:bg-error-bg"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -172,6 +202,21 @@ export default function ShopDetail() {
       <Modal open={paymentOpen} onClose={() => setPaymentOpen(false)} title="Record Payment">
         <PaymentForm shop={shop} onSubmit={handlePayment} onCancel={() => setPaymentOpen(false)} loading={submitting} />
       </Modal>
+
+      <ConfirmationModal
+        open={!!deleteLedgerRow}
+        onClose={() => setDeleteLedgerRow(null)}
+        onConfirm={handleDeleteLedgerRow}
+        title="Remove this ledger entry?"
+        message={
+          <>
+            This will remove <strong>{deleteLedgerRow?.description}</strong> and recalculate the shop's balance.
+            Use this only to clean up incorrect or leftover opening balance/adjustment entries.
+          </>
+        }
+        confirmLabel="Remove Entry"
+        loading={submitting}
+      />
 
       {/* Printable statement - hidden on screen, shown only via @media print in index.css */}
       <div id="receipt-print-area" className="hidden">
