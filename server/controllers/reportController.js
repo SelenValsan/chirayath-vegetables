@@ -37,6 +37,7 @@ const getDashboard = asyncHandler(async (req, res) => {
     todaySalesAgg,
     todayPaymentsAgg,
     outstandingAgg,
+    payableAgg,
     activeShops,
     todayEntriesCount,
     todayQtyAgg,
@@ -54,6 +55,10 @@ const getDashboard = asyncHandler(async (req, res) => {
     Shop.aggregate([
       { $match: { isDeleted: false, currentBalance: { $gt: 0 } } },
       { $group: { _id: null, total: { $sum: '$currentBalance' } } },
+    ]),
+    Shop.aggregate([
+      { $match: { isDeleted: false, partyType: { $in: ['supplier', 'both'] }, payableBalance: { $gt: 0 } } },
+      { $group: { _id: null, total: { $sum: '$payableBalance' } } },
     ]),
     Shop.countDocuments({ isDeleted: false, status: { $ne: 'archived' } }),
     Entry.countDocuments({ status: 'active', date: { $gte: todayStart, $lte: todayEnd } }),
@@ -73,6 +78,7 @@ const getDashboard = asyncHandler(async (req, res) => {
     todaySales,
     todayPayments: todayPaymentsAgg[0]?.total || 0,
     outstandingBalance: outstandingAgg[0]?.total || 0,
+    totalPayable: payableAgg[0]?.total || 0,
     activeShops,
     todayEntries: todayEntriesCount,
     todayQuantity: todayQtyAgg[0]?.totalQty || 0,

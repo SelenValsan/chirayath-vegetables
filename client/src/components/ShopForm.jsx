@@ -5,11 +5,15 @@ import Button from './Button';
 
 const emptyForm = {
   name: '', ownerName: '', phone: '', alternatePhone: '', email: '',
-  address: '', location: '', openingBalance: '', paymentPreference: 'Cash', notes: '', status: 'active',
+  address: '', location: '', partyType: 'customer',
+  openingBalance: '', payableOpeningBalance: '',
+  paymentPreference: 'Cash', notes: '', status: 'active',
 };
 
-export default function ShopForm({ initialData, onSubmit, onCancel, submitLabel = 'Add Shop', loading, isEdit = false }) {
-  const [form, setForm] = useState(emptyForm);
+// Shared form for both Shops (customers) and Suppliers, since both live on the
+// same underlying business record - partyType decides which balance fields show.
+export default function ShopForm({ initialData, onSubmit, onCancel, submitLabel = 'Add Shop', loading, isEdit = false, defaultPartyType = 'customer' }) {
+  const [form, setForm] = useState({ ...emptyForm, partyType: defaultPartyType });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -22,19 +26,24 @@ export default function ShopForm({ initialData, onSubmit, onCancel, submitLabel 
         email: initialData.email || '',
         address: initialData.address || '',
         location: initialData.location || '',
+        partyType: initialData.partyType || defaultPartyType,
         openingBalance: initialData.openingBalance ?? '',
+        payableOpeningBalance: initialData.payableOpeningBalance ?? '',
         paymentPreference: initialData.paymentPreference || 'Cash',
         notes: initialData.notes || '',
         status: initialData.status || 'active',
       });
     }
-  }, [initialData]);
+  }, [initialData, defaultPartyType]);
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
+  const showReceivable = form.partyType === 'customer' || form.partyType === 'both';
+  const showPayable = form.partyType === 'supplier' || form.partyType === 'both';
+
   const validate = () => {
     const errs = {};
-    if (!form.name.trim()) errs.name = 'Shop name is required';
+    if (!form.name.trim()) errs.name = 'Business name is required';
     if (!form.phone.trim()) errs.phone = 'Phone number is required';
     else if (!/^[0-9+\-\s]{7,15}$/.test(form.phone.trim())) errs.phone = 'Enter a valid phone number';
     if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) errs.email = 'Enter a valid email';
@@ -45,16 +54,32 @@ export default function ShopForm({ initialData, onSubmit, onCancel, submitLabel 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
-    const payload = { ...form, openingBalance: Number(form.openingBalance) || 0 };
+    const payload = {
+      ...form,
+      openingBalance: Number(form.openingBalance) || 0,
+      payableOpeningBalance: Number(form.payableOpeningBalance) || 0,
+    };
     onSubmit(payload);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input label="Shop Name" required value={form.name} onChange={set('name')} error={errors.name} placeholder="e.g. Green Mart" />
+        <Input label="Business Name" required value={form.name} onChange={set('name')} error={errors.name} placeholder="e.g. Green Mart" />
         <Input label="Owner / Contact Person" value={form.ownerName} onChange={set('ownerName')} placeholder="e.g. Rajesh Nair" />
       </div>
+
+      <Select
+        label="Business Type"
+        value={form.partyType}
+        onChange={set('partyType')}
+        options={[
+          { value: 'customer', label: 'Customer (buys from us)' },
+          { value: 'supplier', label: 'Supplier (we buy from them)' },
+          { value: 'both', label: 'Customer & Supplier' },
+        ]}
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="Phone Number" required value={form.phone} onChange={set('phone')} error={errors.phone} placeholder="9876543210" />
         <Input label="Alternative Phone" value={form.alternatePhone} onChange={set('alternatePhone')} placeholder="Optional" />
@@ -69,17 +94,36 @@ export default function ShopForm({ initialData, onSubmit, onCancel, submitLabel 
         />
       </div>
       <Input label="Address" value={form.address} onChange={set('address')} placeholder="Optional" />
+      <Input label="Location / Area" value={form.location} onChange={set('location')} placeholder="Optional" />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input label="Location / Area" value={form.location} onChange={set('location')} placeholder="Optional" />
-        <Input
-          label="Opening Balance (₹)"
-          type="number"
-          step="0.01"
-          value={form.openingBalance}
-          onChange={set('openingBalance')}
-          placeholder="0"
-        />
+        {showReceivable && (
+          <Input
+            label="Opening Balance - Receivable (₹)"
+            type="number"
+            step="0.01"
+            value={form.openingBalance}
+            onChange={set('openingBalance')}
+            placeholder="0"
+          />
+        )}
+        {showPayable && (
+          <Input
+            label="Opening Balance - Payable (₹)"
+            type="number"
+            step="0.01"
+            value={form.payableOpeningBalance}
+            onChange={set('payableOpeningBalance')}
+            placeholder="0"
+          />
+        )}
       </div>
+      {showReceivable && showPayable && (
+        <p className="text-xs text-text-muted -mt-2">
+          Receivable is what they owe you (customer side). Payable is what you owe them (supplier side). These stay separate and are never combined.
+        </p>
+      )}
+
       {isEdit && (
         <Select
           label="Status"

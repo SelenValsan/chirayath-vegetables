@@ -10,5 +10,9 @@ router.use('/transactions', require('./transactionRoutes'));
 router.use('/receipts', require('./receiptRoutes'));
 router.use('/reports', require('./reportRoutes'));
 router.use('/search', require('./searchRoutes'));
+router.use('/suppliers', require('./supplierRoutes'));
+router.use('/purchases', require('./purchaseRoutes'));
+router.use('/supplier-payments', require('./supplierPaymentRoutes'));
+router.use('/supplier-transactions', require('./supplierTransactionRoutes'));
 
 module.exports = router;

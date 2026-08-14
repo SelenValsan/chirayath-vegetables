@@ -20,8 +20,13 @@ const shopSchema = new mongoose.Schema(
     },
     address: { type: String, trim: true, default: '' },
     location: { type: String, trim: true, default: '' },
-    openingBalance: { type: Number, default: 0 },
-    currentBalance: { type: Number, default: 0 },
+    // customer = they buy from us (existing/default behavior, unchanged for all existing records).
+    // supplier = we buy from them. both = they do both, tracked as two separate balances below.
+    partyType: { type: String, enum: ['customer', 'supplier', 'both'], default: 'customer' },
+    openingBalance: { type: Number, default: 0 }, // receivable side: what they owed us at the start
+    currentBalance: { type: Number, default: 0 }, // receivable side: what they currently owe us
+    payableOpeningBalance: { type: Number, default: 0 }, // payable side: what we owed them at the start
+    payableBalance: { type: Number, default: 0 }, // payable side: what we currently owe them
     paymentPreference: {
       type: String,
       enum: ['Cash', 'UPI', 'Bank Transfer', 'Cheque', 'Other'],
@@ -40,5 +45,6 @@ const shopSchema = new mongoose.Schema(
 shopSchema.index({ name: 'text', ownerName: 'text', phone: 'text' });
 shopSchema.index({ status: 1 });
 shopSchema.index({ isDeleted: 1 });
+shopSchema.index({ partyType: 1 });
 
 module.exports = mongoose.model('Shop', shopSchema);

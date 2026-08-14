@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Wallet, TrendingUp, AlertCircle, Store, Package, ArrowUpRight } from 'lucide-react';
+import { Wallet, TrendingUp, AlertCircle, Store, Package, ArrowUpRight, Truck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import * as reportService from '../services/reportService';
 import StatCard from '../components/StatCard';
@@ -33,10 +33,11 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard label="Today's Sales" value={data?.todaySales} icon={TrendingUp} />
         <StatCard label="Payments Received" value={data?.todayPayments} icon={Wallet} tone="success" />
-        <StatCard label="Outstanding Balance" value={data?.outstandingBalance} icon={AlertCircle} tone="warning" />
+        <StatCard label="Total Receivable" value={data?.outstandingBalance} icon={AlertCircle} tone="warning" />
+        <StatCard label="Total Payable" value={data?.totalPayable} icon={Truck} tone="error" />
         <StatCard label="Active Shops" value={data?.activeShops} isCurrency={false} icon={Store} />
       </div>
 

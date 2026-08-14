@@ -10,7 +10,10 @@ const { createLedgerEntry, recalculateShopBalance } = require('../services/ledge
 // @route GET /api/shops?search=&status=&page=&limit=&sort=
 const getShops = asyncHandler(async (req, res) => {
   const { search, status, page = 1, limit = 20, sort = '-createdAt' } = req.query;
-  const filter = { isDeleted: false };
+  // Exclude pure suppliers from the customer-facing Shops list (customer + both still show).
+  // $ne also matches documents that don't have partyType set at all, so every existing
+  // shop created before this feature continues to appear exactly as before.
+  const filter = { isDeleted: false, partyType: { $ne: 'supplier' } };
 
   if (status && status !== 'all') {
     if (status === 'pending') filter.currentBalance = { $gt: 0 };
@@ -109,7 +112,7 @@ const updateShop = asyncHandler(async (req, res) => {
   const shop = await Shop.findOne({ _id: req.params.id, isDeleted: false });
   if (!shop) throw new ApiError('Shop not found', 404);
 
-  const editable = ['name', 'ownerName', 'phone', 'alternatePhone', 'email', 'address', 'location', 'paymentPreference', 'notes', 'status'];
+  const editable = ['name', 'ownerName', 'phone', 'alternatePhone', 'email', 'address', 'location', 'paymentPreference', 'notes', 'status', 'partyType'];
   editable.forEach((field) => {
     if (req.body[field] !== undefined) shop[field] = req.body[field];
   });

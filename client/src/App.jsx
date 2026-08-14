@@ -16,6 +16,10 @@ import Receipts from './pages/Receipts';
 import ReceiptDetail from './pages/ReceiptDetail';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import Suppliers from './pages/Suppliers';
+import SupplierDetail from './pages/SupplierDetail';
+import PurchaseForm from './pages/PurchaseForm';
+import PurchaseDetail from './pages/PurchaseDetail';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -49,6 +53,13 @@ export default function App() {
 
         <Route path="/reports" element={<Reports />} />
         <Route path="/settings" element={<Settings />} />
+
+        <Route path="/suppliers" element={<Suppliers />} />
+        <Route path="/suppliers/:id" element={<SupplierDetail />} />
+
+        <Route path="/purchases/new" element={<PurchaseForm />} />
+        <Route path="/purchases/:id/edit" element={<PurchaseForm />} />
+        <Route path="/purchases/:id" element={<PurchaseDetail />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

@@ -1,13 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, Store, ClipboardList, Wallet, ArrowLeftRight, Receipt, BarChart3, Settings, LogOut, Leaf,
+  LayoutDashboard, Store, ClipboardList, Wallet, ArrowLeftRight, Receipt, BarChart3, Settings, LogOut, Leaf, Truck,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/shops', label: 'Shops', icon: Store },
+  { to: '/suppliers', label: 'Suppliers', icon: Truck },
   { to: '/entries', label: 'Daily Entries', icon: ClipboardList },
   { to: '/payments', label: 'Payments', icon: Wallet },
   { to: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
